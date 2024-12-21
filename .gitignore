@@ -2,3 +2,4 @@
 /📝 Sudoku Image Dataset_files/
 /.idea
 /__pycache__/
+/knn_model.pkl
