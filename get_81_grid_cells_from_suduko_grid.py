@@ -1,7 +1,8 @@
 import time
 import cv2
 import numpy as np
-from CandidateMinimizationSolver import solve_sudoku_int  
+from CandidateMinimizationSolver import solve_sudoku_int
+from model import predict 
 # def remove_large_black_lines(binary_image, size_threshold=400):
 #     """
 #     Removes connected components of black pixels in a binary image if their size exceeds the given threshold.
@@ -254,32 +255,62 @@ def construct_sudoku_grid(numbers_from_cells, empty_cells_indices):
     
     return grid
 
+def resize_non_empty_cells(non_empty_cells):
+    resized_cells = []
+    for cell in non_empty_cells:
+        resized_cell = cv2.resize(cell, (32, 32))
+        resized_cells.append(resized_cell)
+    return resized_cells
+
+def print_sudoku_grid(grid):
+    """
+    Print a 9x9 Sudoku grid in a clean and visually appealing format.
+    
+    Args:
+        grid (list of list of int): A 9x9 matrix representing the Sudoku grid.
+    """
+    print("+-------+-------+-------+")
+    for i in range(9):
+        row = "| "
+        for j in range(9):
+            cell = grid[i][j]
+            row += f"{cell if cell != 0 else '.'} "  # Use '.' for empty cells
+            if (j + 1) % 3 == 0:
+                row += "| "
+        print(row)
+        if (i + 1) % 3 == 0:
+            print("+-------+-------+-------+")
 
 def get_solved_sudoku_from_image(image_path):
     non_empty_cells, empty_cells_indices = get_non_empty_grid_cells_as_grayscale(image_path)
+    # Resize the non-empty cells to 32x32
+    non_empty_cells_rezied = resize_non_empty_cells(non_empty_cells)
     #call ocr model with the non empty images
-    # numbers_from_cells =ocr(non_empty_cells)
-    #mock the number form cells for now
-    numbers_from_cells=[9,1,2,7,3,6,2,3,9,8,7,3,1,9,6,5,1,1,4,4,9,6,8,3,6]
+    numbers_from_cells =predict("knn_model.pkl",non_empty_cells_rezied)
+    # #mock the number form cells for now
+    # numbers_from_cells=[9,1,2,7,3,6,2,3,9,8,7,3,1,9,6,5,1,1,4,4,9,6,8,3,6]
     grid=construct_sudoku_grid(numbers_from_cells, empty_cells_indices)
     print("Sudoku grid constructed successfully.")
-    print(grid)
+    print_sudoku_grid(grid)
+    print("-------------------------------------------------------------------------------------")
     # Solve the Sudoku grid
     solve_status = solve_sudoku_int(grid)
-    if solve_status:
+    if solve_status is 1:
         print("Sudoku grid solved successfully.")
-        print(grid)
+        print_sudoku_grid(grid)
         return grid
     elif solve_status is -2:
         print("Sudoku grid is not solvable.")
         return solve_status
-    else:
+    elif solve_status is -1:
         print("Invalid Sudoku grid.")
         return solve_status
+    else:
+        print("WTF???")
     
 if __name__ == "__main__":
     #measure time
     time_now = time.time()
-    image_path = "images.png"
+    image_path = "download.png"
     get_solved_sudoku_from_image(image_path)
     print(f"Time taken: {time.time() - time_now:.2f} seconds.")

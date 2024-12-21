@@ -27,12 +27,17 @@ def solve_sudoku_int(board: List[List[int]]) ->int:
                         or val in col[j]
                         or val in box[box_index]
                     ):
-                        return -1  # Invalid initial board
-                    row[i].add(val)
-                    col[j].add(val)
-                    box[box_index].add(val)
+                        # Mark the cell as empty if it's invalid
+                        board[i][j] = 0
+                        unsolved.append((i, j))
+                    else:
+                        # Add value to constraints
+                        row[i].add(val)
+                        col[j].add(val)
+                        box[box_index].add(val)
                 else:
                     unsolved.append((i, j))
+
 
         # Backtracking function with minimum candidate optimization
         def backtrack(index: int) -> bool:
