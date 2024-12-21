@@ -1,6 +1,6 @@
 from typing import List
 
-def solve_sudoku_int(self, board: List[List[int]]) -> bool:
+def solve_sudoku_int(board: List[List[int]]) ->int:
         """
         Solve the Sudoku puzzle represented as a List[List[int]] in place.
         
@@ -27,7 +27,7 @@ def solve_sudoku_int(self, board: List[List[int]]) -> bool:
                         or val in col[j]
                         or val in box[box_index]
                     ):
-                        return False  # Invalid initial board
+                        return -1  # Invalid initial board
                     row[i].add(val)
                     col[j].add(val)
                     box[box_index].add(val)
@@ -91,5 +91,6 @@ def solve_sudoku_int(self, board: List[List[int]]) -> bool:
 
             return False
 
-        # Start solving
-        return backtrack(0)
+        if not backtrack(0):
+            return -2  # No solution exists
+        return 1  # Solved
