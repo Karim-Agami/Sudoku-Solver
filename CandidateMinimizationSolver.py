@@ -27,9 +27,7 @@ def solve_sudoku_int(board: List[List[int]]) ->int:
                         or val in col[j]
                         or val in box[box_index]
                     ):
-                        # Mark the cell as empty if it's invalid
-                        board[i][j] = 0
-                        unsolved.append((i, j))
+                        return -1
                     else:
                         # Add value to constraints
                         row[i].add(val)

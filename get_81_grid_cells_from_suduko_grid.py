@@ -237,7 +237,7 @@ def get_non_empty_grid_cells_as_grayscale(image_path):
 
 def construct_sudoku_grid(numbers_from_cells, empty_cells_indices):
     # Create a 9x9 grid with zeros
-    grid = [[0 for _ in range(9)] for _ in range(9)]
+    grid = np.zeros((9, 9), dtype=int)
     
     # Keep track of the index in the numbers_from_cells list
     numbers_index = 0
@@ -287,8 +287,8 @@ def get_solved_sudoku_from_image(image_path):
     non_empty_cells_rezied = resize_non_empty_cells(non_empty_cells)
     #call ocr model with the non empty images
     numbers_from_cells =predict("knn_model.pkl",non_empty_cells_rezied)
-    # #mock the number form cells for now
-    # numbers_from_cells=[9,1,2,7,3,6,2,3,9,8,7,3,1,9,6,5,1,1,4,4,9,6,8,3,6]
+    #mock the number form cells for now
+    # numbers_from_cells=[8, 6, 9, 5, 9, 6, 2, 7, 1, 2, 5, 7, 4, 3, 3, 9, 2, 3, 1, 5, 8, 6, 9, 2, 5, 3]
     grid=construct_sudoku_grid(numbers_from_cells, empty_cells_indices)
     print("Sudoku grid constructed successfully.")
     print_sudoku_grid(grid)
@@ -306,7 +306,7 @@ def get_solved_sudoku_from_image(image_path):
         print("Invalid Sudoku grid.")
         return solve_status
     else:
-        print("WTF???")
+        print("Should Not ever Reach This Statement")
     
 if __name__ == "__main__":
     #measure time
