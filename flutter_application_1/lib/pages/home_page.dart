@@ -12,7 +12,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   File? _image;
   String _responseText = "";
-
+  String _status = "";
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 _image = null;
                 _responseText = "";
+                _status = "";
               });
             },
           ),
@@ -71,7 +73,39 @@ class _HomePageState extends State<HomePage> {
                   onPressed: _uploadImage,
                 ),
               SizedBox(height: 20),
-              if (_responseText.isNotEmpty)
+
+              // Conditional UI based on `_status`
+              if (_status == "1")
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 9, // Sudoku board has 9 columns
+                      crossAxisSpacing: 4.0,
+                      mainAxisSpacing: 4.0,
+                    ),
+                    itemCount: 81, // Sudoku board has 81 cells
+                    itemBuilder: (context, index) {
+                      List<int> sudokuValues = stringToMatrix(_responseText)
+                          .expand((row) => row)
+                          .toList();
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white),
+                          color: Colors.grey[800],
+                        ),
+                        child: Center(
+                          child: Text(
+                            sudokuValues[index]
+                                .toString(), // Fill each cell with the corresponding number
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                )
+              else if (_responseText.isNotEmpty)
                 Text(
                   _responseText,
                   style: TextStyle(color: Colors.white),
@@ -103,7 +137,7 @@ class _HomePageState extends State<HomePage> {
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.17.28:8000/upload'),
+      Uri.parse('http://192.168.1.15:8000/upload'),
     );
     request.files.add(await http.MultipartFile.fromPath('file', _image!.path));
 
@@ -111,11 +145,25 @@ class _HomePageState extends State<HomePage> {
     if (response.statusCode == 200) {
       print("Image uploaded successfully.");
       final responseData = await response.stream.bytesToString();
-      setState(() {
-        _responseText = responseData; // Set the response text to display
-        List<List<int>> matrix = stringToMatrix(responseData);
-        print(matrix);
-      });
+      final responseParts = responseData.split("*");
+      if (responseParts.length >= 2) {
+        String data = responseParts[1];
+        _status = responseParts[0];
+        _status = _status.substring(1); // Remove the first character
+        data = data.substring(0, data.length - 1); // Remove the last character
+
+        print("Status: $_status");
+        print("Data: $data");
+        setState(() {
+          _responseText = data;
+          // List<List<int>> matrix = stringToMatrix(data);
+          // print(matrix);
+        });
+      } else {
+        setState(() {
+          _responseText = 'Invalid response format';
+        });
+      }
     } else {
       setState(() {
         _responseText = 'Upload failed with status: ${response.statusCode}';
