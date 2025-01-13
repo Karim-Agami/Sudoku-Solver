@@ -2,7 +2,7 @@ import time
 import cv2
 import numpy as np
 from CandidateMinimizationSolver import solve_sudoku_int
-from model2 import predict 
+from model import predict 
 # def remove_large_black_lines(binary_image, size_threshold=400):
 #     """
 #     Removes connected components of black pixels in a binary image if their size exceeds the given threshold.
@@ -110,7 +110,7 @@ def adaptively_filter_image(image):
     return filtered_image
 
 
-def is_empty_cell(cell, black_pixel_threshold=8000, center_weight_factor=100):
+def is_empty_cell(cell, black_pixel_threshold=1000, center_weight_factor=100):
 
     size = cell.shape[0]
     half_center = size // 4  # This will give a 25x25 region for 50x50 cells
@@ -189,15 +189,17 @@ def extract_empty_cells(grid_cells):
 #             non_empty_cells.append(cell)
 #     return non_empty_cells
 
-def get_non_empty_grid_cells_as_grayscale(image):
+def get_non_empty_grid_cells_as_grayscale(image_path):
     # Step 1: Load the original image in grayscale
-    grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    grayscale_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if grayscale_image is None:
+        raise FileNotFoundError(f"Image at path '{image_path}' not found.")
     
     resized_image = cv2.resize(grayscale_image, (450, 450))
 
     # Step 2: Perform adaptive filtering for noise reduction
     cleaned_result = adaptively_filter_image(resized_image)
-    print("Extracting grid cells...")
+
     # Step 3: Create a binary image for empty cell detection
     binary_image = cv2.adaptiveThreshold(
         cleaned_result, 
@@ -224,7 +226,7 @@ def get_non_empty_grid_cells_as_grayscale(image):
         if idx not in empty_cells_indices
     ]
     
-    # Step 8: Display the non-empty cells
+    # # Step 8: Display the non-empty cells
     # for idx, cell in enumerate(non_empty_cells):
     #     cv2.imshow(f"Cell {idx}", cell)
     #     cv2.waitKey(0)
@@ -279,41 +281,36 @@ def print_sudoku_grid(grid):
         if (i + 1) % 3 == 0:
             print("+-------+-------+-------+")
 
-def get_solved_sudoku_from_image(image):
-    
-    non_empty_cells, empty_cells_indices = get_non_empty_grid_cells_as_grayscale(image)
+def get_solved_sudoku_from_image(image_path):
+    non_empty_cells, empty_cells_indices = get_non_empty_grid_cells_as_grayscale(image_path)
     # Resize the non-empty cells to 32x32
-    print("Predicting numbers from cells...")
     non_empty_cells_rezied = resize_non_empty_cells(non_empty_cells)
     #call ocr model with the non empty images
-    print("Predicting numbers from cells...",len(non_empty_cells_rezied))
-    numbers_from_cells =predict("knn_model.pkl",non_empty_cells_rezied,False)
-    # #mock the number form cells for now
-    # numbers_from_cells=[9,1,2,7,3,6,2,3,9,8,7,3,1,9,6,5,1,1,4,4,9,6,8,3,6]
-    print("Numbers predicted successfully.",numbers_from_cells)
-    grid= construct_sudoku_grid(numbers_from_cells, empty_cells_indices)
+    numbers_from_cells =predict("knn_model.pkl",non_empty_cells_rezied)
+    #mock the number form cells for now
+    # numbers_from_cells=[8, 6, 9, 5, 9, 6, 2, 7, 1, 2, 5, 7, 4, 3, 3, 9, 2, 3, 1, 5, 8, 6, 9, 2, 5, 3]
+    grid=construct_sudoku_grid(numbers_from_cells, empty_cells_indices)
     print("Sudoku grid constructed successfully.")
     print_sudoku_grid(grid)
     print("-------------------------------------------------------------------------------------")
     # Solve the Sudoku grid
     solve_status = solve_sudoku_int(grid)
-    if solve_status == 1:
+    if solve_status is 1:
         print("Sudoku grid solved successfully.")
         print_sudoku_grid(grid)
-        return grid, solve_status
-    elif solve_status == -2:
+        return grid
+    elif solve_status is -2:
         print("Sudoku grid is not solvable.")
-        return None,solve_status
-    elif solve_status == -1:
+        return solve_status
+    elif solve_status is -1:
         print("Invalid Sudoku grid.")
-        return None,solve_status
+        return solve_status
     else:
-       print("Should Not ever Reach This Statement")
+        print("Should Not ever Reach This Statement")
     
-# if __name__ == "__main__":
-#     #measure time
-#     time_now = time.time()
-#     image=cv2.imread("download.png")
-#     # image_path = "download.png"
-#     get_solved_sudoku_from_image(image)
-#     print(f"Time taken: {time.time() - time_now:.2f} seconds.")
+if __name__ == "__main__":
+    #measure time
+    time_now = time.time()
+    image_path = "download.png"
+    get_solved_sudoku_from_image(image_path)
+    print(f"Time taken: {time.time() - time_now:.2f} seconds.")

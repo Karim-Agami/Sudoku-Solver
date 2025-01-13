@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 app = FastAPI()
 import matplotlib.pyplot as plt
+from get_81_grid_cells_from_suduko_grid import get_solved_sudoku_from_image
 def show_images(images,titles=None):
     #This function is used to show image(s) with titles by sending an array of images and an array of associated titles.
     # images[0] will be drawn with the title titles[0] if exists
@@ -402,20 +403,27 @@ def predict(model_name, image):
     return result
 
 def process_image(image: Image.Image):
-    # Convert the PIL image to an OpenCV-compatible format
     opencv_image = np.array(image)
     print("Input image shape:", opencv_image.shape)
-    
-    # Process the OpenCV image
-    detected_grid = grid_detect(opencv_image)  # Call your existing image processing logic
+
+    detected_grid = grid_detect(opencv_image)
     print("Detected grid shape:", detected_grid.shape)
-    # Load the KNN model
-    predictions = predict("knn_model.pkl", detected_grid)
-    print(predictions)
-    prediction_str = ",".join(predictions.flatten().astype(str))  # Convert to string and join
-    prediction_str = prediction_str.replace(" ", "")  # Remove any spaces (if any)
-    print(f"Formatted prediction string: {prediction_str}")
-    return prediction_str
+    show_images([detected_grid], ["Detected Grid"])
+    grid,status=get_solved_sudoku_from_image(detected_grid)
+    # predictions = predict("knn_model.pkl", detected_grid)
+    print("aaaaaaaaaaaaa",grid,status)
+    grid_np = np.array(grid)  
+    if status == 1:
+        prediction_str = ",".join(grid_np.flatten().astype(str))
+        prediction_str = prediction_str.replace(" ", "")
+        print("Prediction:", prediction_str)
+        return f"{status}"+"*"+prediction_str
+    elif status == -2:
+        return f"{2}"+"*"+"Sudoku grid is not solvable."
+        
+    elif status == -1:
+        return f"{3}"+"*"+"Invalid Sudoku grid."
+
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     try:
