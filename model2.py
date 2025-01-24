@@ -57,49 +57,9 @@ def extract_features_for_all(images):
     return np.array(features)
     
 
-
 def prediction_from_grid(features, model):
     result=model.predict(features)
     return result
-
-# def reshape_predictions(predictions, grid_size=(9, 9)):
-#     """
-#     Reshapes the predictions to a 2D grid.
-    
-#     Parameters:
-#     predictions (numpy.ndarray): A 1D numpy array containing the predicted class of each image.
-#     grid_size (Tuple[int, int]): The size of the grid (rows, cols).
-    
-#     Returns:
-#     numpy.ndarray: A 2D numpy array where each element is the predicted class of the corresponding image in the input list.
-#     """
-
-#     rows, cols = grid_size
-#     reshaped = np.array(predictions).reshape(rows, cols)
-#     return reshaped
-
-# def split_image_to_grid(image, grid_size=(9, 9)):
-#     """
-#     Splits an image into a grid of equal parts.
-
-#     Parameters:
-#     image (numpy.ndarray): A numpy array of shape (H, W) representing the input image.
-
-#     Returns:
-#     List[numpy.ndarray]: A list of numpy arrays of shape (h, w) representing the grid of images.
-#     """
-#     h, w = image.shape
-#     rows, cols = grid_size
-#     h_step = h // rows
-#     w_step = w // cols
-
-#     grid = []
-#     for i in range(0, h, h_step):
-#         for j in range(0, w, w_step):
-#             grid.append(image[i:i+h_step, j:j+w_step])
-
-#     return np.array(grid)
-
 
 
 def predict_number_from_pretrained(image,device,processor,model):
